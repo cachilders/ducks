@@ -162,7 +162,6 @@ function drop_duck(duck)
  if duck.orientation == "r" then
   if duck.x > 96 then
    if duck.y == 96 then
-    count = count - 1
     duck.down = true
     duck.x = duck.x + 2
     duck.y = 104
@@ -180,6 +179,7 @@ function drop_duck(duck)
     end
    elseif duck.y == 112 then
     if duck.timer > 2 then
+     count = count - 1
      light = true
      duck.x = duck.x + 2
      duck.y = 120
