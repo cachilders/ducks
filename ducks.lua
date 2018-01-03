@@ -4,7 +4,7 @@
 function _init()
  count = 0
  light = false
- FLOOR = 120
+ floor = 120
 end
 
 function _update()
@@ -13,7 +13,7 @@ function _update()
   spr_light_mod = 0
  else
   speed = 5
-  spr_light_mod = 16
+  spr_light_mod = 4
  end
  if count == 0 then
   display = 'up or down to play'
@@ -175,18 +175,18 @@ function drop_duck(duck)
     else
      duck.x = duck.x - 2
     end
-    duck.y = FLOOR
-    duck.spr = 12 + spr_light_mod
+    duck.y = floor
+    duck.spr = 4 + spr_light_mod
     duck.spr_x_mod = get_duck_spr_x_mod(duck)
     duck.spr_y_mod = get_duck_spr_y_mod(duck)
    else
     duck.counter = duck.counter + 1
    end
   else
-   if light and duck.spr > 12 then
-    duck.spr = duck.spr - 16
-   elseif not light and duck.spr < 27 then
-    duck.spr = duck.spr + 16
+   if light and duck.spr > 4 then
+    duck.spr = duck.spr - 4
+   elseif not light and duck.spr < 5 then
+    duck.spr = duck.spr + 4
    end
   end
  else
@@ -212,7 +212,7 @@ function get_duck_spr_x_mod(duck)
 end
 
 function get_duck_spr_y_mod(duck)
- if not duck.down or duck.y == FLOOR then
+ if not duck.down or duck.y == floor then
   return nil
  else
   return 'flip_y'
@@ -220,6 +220,6 @@ function get_duck_spr_y_mod(duck)
 end
 
 function get_cursor_position(val)
- local str = '..val
+ local str = ''..val
  return 64 - (#str * 2) 
 end
