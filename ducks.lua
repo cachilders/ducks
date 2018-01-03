@@ -16,7 +16,7 @@ function _update()
   spr_light_mod = 16
  end
  if count == 0 then
-  display = "up or down to play"
+  display = 'up or down to play'
  else
   display = count
  end
@@ -94,7 +94,7 @@ function jump_duck(duck)
    duck.jump = 2
    duck.spr = 3 + spr_light_mod
    duck.spr_x_mod = get_duck_spr_x_mod(duck)
-   if duck.direction == "r" then
+   if duck.direction == 'r' then
     duck.x = duck.x + 8
    else
     duck.x = duck.x - 8
@@ -122,7 +122,7 @@ function move_duck(duck)
   end
   if duck.jump == 0 then
    duck.counter = 0
-   if duck.direction == "r" then
+   if duck.direction == 'r' then
     duck.x = duck.x + 8
    else
     duck.x = duck.x - 8
@@ -146,7 +146,7 @@ function drop_duck(duck)
     duck.x = duck.x - 2
    end
    duck.y = 104
-   duck.spr = 9 + spr_light_mod
+   duck.spr = 1 + spr_light_mod
    duck.spr_x_mod = get_duck_spr_x_mod(duck)
    duck.spr_y_mod = get_duck_spr_y_mod(duck)
    duck.counter = 0
@@ -159,7 +159,7 @@ function drop_duck(duck)
      duck.x = duck.x - 2
     end
     duck.y = 112
-    duck.spr = 10 + spr_light_mod
+    duck.spr = 2 + spr_light_mod
     duck.spr_x_mod = get_duck_spr_x_mod(duck)
     duck.spr_y_mod = get_duck_spr_y_mod(duck)
     duck.counter = 0
@@ -197,14 +197,14 @@ end
 function get_duck_direction()
  direction = rnd()
  if direction <= 0.5 then
-  return "r"
+  return 'r'
  else
-  return "l"
+  return 'l'
  end
 end
 
 function get_duck_spr_x_mod(duck)
- if duck.direction == "r" then
+ if duck.direction == 'r' then
   return nil
  else
   return 'flip_x'
@@ -212,7 +212,7 @@ function get_duck_spr_x_mod(duck)
 end
 
 function get_duck_spr_y_mod(duck)
- if not duck.drop or duck.y == FLOOR then
+ if not duck.down or duck.y == FLOOR then
   return nil
  else
   return 'flip_y'
@@ -220,6 +220,6 @@ function get_duck_spr_y_mod(duck)
 end
 
 function get_cursor_position(val)
- local str = ""..val
+ local str = '..val
  return 64 - (#str * 2) 
 end
