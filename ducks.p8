@@ -7,18 +7,19 @@ __lua__
 function _init()
  count = 0
  light = false
+ floor = 120
 end
 
 function _update()
  if light then
   speed = 150
-  state_mod = 0
+  spr_light_mod = 0
  else
   speed = 5
-  state_mod = 16
+  spr_light_mod = 4
  end
  if count == 0 then
-  display = "up or down to play"
+  display = 'up or down to play'
  else
   display = count
  end
@@ -40,16 +41,22 @@ function _draw()
  draw_ducks()
 end
 
+function randomize_counter()
+ return rnd(5 * 100) / 100
+end
+
 function make_ducks()
  ducks = {}
- for i=1, 5 do
+ for i = 1, 5 do
   count = count + 1
   ducks[i] = {}
-  ducks[i].x = (rnd(76 * 100) / 100) + 23
+  ducks[i].x = (rnd(79 * 100) / 100) + 22
   ducks[i].y = 96
-  ducks[i].timer = rnd(5 * 100) / 100
-  ducks[i].orientation = orient_duck()
-  ducks[i].state = get_duck_state()
+  ducks[i].counter = randomize_counter()
+  ducks[i].direction = get_duck_direction()
+  ducks[i].spr_x_mod = get_duck_spr_x_mod(ducks[i])
+  ducks[i].spr_y_mod = get_duck_spr_y_mod(ducks[i])
+  ducks[i].spr = 1
   ducks[i].jump = 0
   ducks[i].down = false
  end
@@ -57,207 +64,185 @@ end
 
 function draw_ducks()
  for duck in all(ducks) do
-  if duck.down != true then
+  if not duck.down then
    move_duck(duck)
   else
    drop_duck(duck)
   end
-  spr(duck.state, duck.x, duck.y)
+  spr(duck.spr, duck.x, duck.y, 1, 1, duck.spr_x_mod, duck.spr_y_mod)
  end
 end
 
 function draw_room()
  if light then
-  print(display, get_print_x(display), 60, 8)
+  print(display, get_cursor_position(display), 60, 8)
   map(0, 0, 0, 96, 16, 4)
-	 spr(46, 56, 40, 2, 2)
+  spr(46, 56, 40, 2, 2)
  else
-  print(display, get_print_x(display), 60, 2)
+  print(display, get_cursor_position(display), 60, 2)
   map(0, 4, 0, 96, 16, 4)
-	 spr(14, 56, 40, 2, 2)
+  spr(14, 56, 40, 2, 2)
  end
 end
 
 function jump_duck(duck)
- duck.timer = duck.timer + 1
- if duck.timer > speed and not light then
+ duck.counter = duck.counter + 1
+ if duck.counter > speed and not light then
   if duck.jump == 0 then
    sfx(1)
-   if duck.orientation == "r" then
-    duck.jump = 1
-    duck.state = 2 + state_mod
-   else
-    duck.jump = 1
-    duck.state = 5 + state_mod
-   end
+   duck.jump = 1
+   duck.spr = 2 + spr_light_mod
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
   elseif duck.jump == 1 then
-   if duck.orientation == "r" then
-    duck.jump = 2
-    duck.state = 3 + state_mod
+   duck.jump = 2
+   duck.spr = 3 + spr_light_mod
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
+   if duck.direction == 'r' then
     duck.x = duck.x + 8
    else
-    duck.jump = 2
-    duck.state = 4 + state_mod
     duck.x = duck.x - 8
    end
   else
-   if duck.orientation == "r" then
-    duck.jump = 0
-    duck.state = 1 + state_mod
-   else
-    duck.jump = 0
-    duck.state = 6 + state_mod
-   end
+   duck.jump = 0
+   duck.spr = 1 + spr_light_mod
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
   end
  elseif light then
- 	drop_duck(duck)
-  if duck.orientation == "r" then
-   duck.jump = 0
-   duck.state = 1 + state_mod
-  else
-   duck.jump = 0
-   duck.state = 6 + state_mod
-  end
+  drop_duck(duck)
+  duck.jump = 0
+  duck.spr = 1 + spr_light_mod
+  duck.spr_x_mod = get_duck_spr_x_mod(duck)
  end
 end
 
 function move_duck(duck)
  jump_duck(duck)
- if duck.timer > speed then
-  duck.timer = 0
+ if duck.counter > speed then
+  if duck.counter > 6 then
+   duck.counter = randomize_counter()
+  else
+   duck.counter = 0
+  end
   if duck.jump == 0 then
-   if duck.jump == 0 then
-    duck.timer = 0
-    duck.orientation = orient_duck()
-    duck.state = get_duck_state(duck.orientation)
-    drop_duck(duck)
-    if duck.orientation == "r" then
-     duck.x = duck.x + 8
-    else
-     duck.x = duck.x - 8
-    end
+   duck.counter = 0
+   if duck.direction == 'r' then
+    duck.x = duck.x + 8
+   else
+    duck.x = duck.x - 8
+   end
+   drop_duck(duck)
+   if not duck.down then
+    duck.direction = get_duck_direction()
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
    end
   end
- end
-end
-
-function orient_duck()
- direction = rnd()
- if direction <= 0.5 then
-  return "r"
- else
-  return "l"
- end
-end
-
-function get_duck_state(orientation)
- if orientation == "r" then
-  return 1 + state_mod
- else
-  return 6 + state_mod
  end
 end
 
 function drop_duck(duck)
- if duck.orientation == "r" then
-  if duck.x > 96 then
-   if duck.y == 96 then
-    duck.down = true
+ if duck.x > 101 or duck.x < 22 then
+  duck.down = true
+  if duck.y == 96 then
+   if duck.direction == 'r' then
     duck.x = duck.x + 2
-    duck.y = 104
-    duck.state = 9 + state_mod
-    duck.timer = 0
-   elseif duck.y == 104 then
-    if duck.timer > 2 then
-     sfx(2)
-     duck.x = duck.x + 2
-     duck.y = 112
-     duck.state = 10 + state_mod
-     duck.timer = 0
-    else
-     duck.timer = duck.timer + 1
-    end
-   elseif duck.y == 112 then
-    if duck.timer > 2 then
-     count = count - 1
-     light = true
-     duck.x = duck.x + 2
-     duck.y = 120
-     duck.state = 12 + state_mod
-    else
-     duck.timer = duck.timer + 1
-    end
    else
-    if light and duck.state > 12 then
-     duck.state = duck.state - 16
-    elseif not light and duck.state < 27 then
-     duck.state = duck.state + 16
+    duck.x = duck.x - 2
+   end
+   duck.y = 104
+   duck.spr = 1 + spr_light_mod
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
+   duck.spr_y_mod = get_duck_spr_y_mod(duck)
+   duck.counter = 0
+  elseif duck.y == 104 then
+   if duck.counter > 2 then
+    sfx(2)
+    if duck.direction == 'r' then
+     duck.x = duck.x + 2
+    else
+     duck.x = duck.x - 2
     end
+    duck.y = 112
+    duck.spr = 2 + spr_light_mod
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
+    duck.spr_y_mod = get_duck_spr_y_mod(duck)
+    duck.counter = 0
+   else
+    duck.counter = duck.counter + 1
+   end
+  elseif duck.y == 112 then
+   if duck.counter > 2 then
+    count = count - 1
+    light = true
+    if duck.direction == 'r' then
+     duck.x = duck.x + 2
+    else
+     duck.x = duck.x - 2
+    end
+    duck.y = floor
+    duck.spr = 4 + spr_light_mod
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
+    duck.spr_y_mod = get_duck_spr_y_mod(duck)
+   else
+    duck.counter = duck.counter + 1
    end
   else
-   duck.down = false
+   if light and duck.spr > 4 then
+    duck.spr = duck.spr - 4
+   elseif not light and duck.spr < 5 then
+    duck.spr = duck.spr + 4
+   end
   end
  else
-  if duck.x < 27 then
-   if duck.y == 96 then
-    count = count - 1
-    duck.down = true
-    duck.x = duck.x - 2
-    duck.y = 104
-    duck.state = 8 + state_mod
-   elseif duck.y == 104 then
-    if duck.timer > 2 then
-     sfx(2)
-     duck.x = duck.x - 2
-     duck.y = 112
-     duck.state = 7 + state_mod 
-     duck.timer = 0
-    else
-     duck.timer = duck.timer + 1
-    end
-   elseif duck.y == 112 then
-    if duck.timer > 2 then
-     light = true
-     duck.x = duck.x - 2
-     duck.y = 120
-     duck.state = 11 + state_mod
-    else
-     duck.timer = duck.timer + 1
-    end
-   else
-    if light and duck.state > 12 then
-     duck.state = duck.state - 16
-    elseif not light and duck.state < 27 then
-     duck.state = duck.state + 16
-    end
-   end 
-  else
-   duck.down = false
-  end
+  duck.down = false
  end
 end
 
-function get_print_x(val)
- local str = ""..val
+function get_duck_direction()
+ direction = rnd()
+ if direction <= 0.5 then
+  return 'r'
+ else
+  return 'l'
+ end
+end
+
+function get_duck_spr_x_mod(duck)
+ if duck.direction == 'r' then
+  return nil
+ else
+  return 'flip_x'
+ end
+end
+
+function get_duck_spr_y_mod(duck)
+ if not duck.down or duck.y == floor then
+  return nil
+ else
+  return 'flip_y'
+ end
+end
+
+function get_cursor_position(val)
+ local str = ''..val
  return 64 - (#str * 2) 
 end
 __gfx__
-000000000000000000000900009000000000090000900000000000000000000000004040040400000000000000a0000000000a00000000000000015555100000
-0000000000000000000090aa090aa000000aa090aa090000000000000040400000009990099900000004040000a0994004990a00000000000000000550000000
-00700700000090000000090000900000000009000090000000009000009990000000999999990000000999000909990000999090000000000000000050000000
-0007700000090aa00009999099990000000099990999900000aa0900009999000000090000900000009999000090994004990900000000000000000500000000
-0007700000009000000099900999000000009990099900000000900000090000000aa090090aa000000090004444444444444444000000000000000600000000
-007007000099990000004040040400000000404004040000000999900aa09000000009000090000000090aa04444444444444444000000000000000050000000
-00000000000999000000000000000000000000000000000000099900000900000000000000000000000090000000000000000000000000000000000050000000
-00000000000404000000000000000000000000000000000000040400000000000000000000000000000000000000000000000000000000000000000560000000
-00000000000000000000040000400000000004000040000000000000000000000000505005050000000000000090000000000900000000000000053333000000
-00000000000000000000409904099000000990409904000000000000005050000000444004440000000505000090445005440900000000000000333333330000
-00000000000040000000040000400000000004000040000000004000004440000000444444440000000444000404440000444040000000000003333553333000
-00000000000409900004444044440000000044440444400000990400004444000000040000400000004444000040445005440400000000000005355551530000
-00000000000040000000444004440000000044400444000000004000000400000009904004099000000040005555555555555555000000000000511551150000
-00000000004444000000505005050000000050500505000000044440099040000000040000400000000409905555555555555555000000000000051511500000
-00000000000444000000000000000000000000000000000000044400000400000000000000000000000040000000000000000000000000000000005555000000
-00000000000505000000000000000000000000000000000000050500000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000009000090000000000a000000000000000400004000000000090000000000000000000000000000000000000000000000015555100000
+0000000000000000000090aa090aa00004990a000000000000004099040990000544090000000000000000000000000000000000000000000000000550000000
+00700700000090000000090000900000009990900000400000000400004000000044404000000000000000000000000000000000000000000000000050000000
+0007700000090aa00009999099990000049909000004099000044440444400000544040000000000000000000000000000000000000000000000000500000000
+00077000000090000000999009990000444444440000400000004440044400005555555500000000000000000000000000000000000000000000000600000000
+00700700009999000000404004040000444444440044440000005050050500005555555500000000000000000000000000000000000000000000000050000000
+00000000000999000000000000000000000000000004440000000000000000000000000000000000000000000000000000000000000000000000000050000000
+00000000000404000000000000000000000000000005050000000000000000000000000000000000000000000000000000000000000000000000000560000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000053333000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000333333330000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003333553333000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005355551530000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000511551150000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000051511500000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005555000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 05151515155115515151515001511151511111151511151055555555555555550000000000000000000000000000000000000000000000000000015555100000
 51111111111111111111111511111111111111111111111100055000000550000000000000000000000000000000000000000000000000000000000660000000
 11111111111111111111111111111111111111111111111100055000000550000000000000000000000000000000000000000000000000000000000070000000
