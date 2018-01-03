@@ -47,21 +47,21 @@ function make_ducks()
  for i = 1, 5 do
   count = count + 1
   ducks[i] = {}
-  ducks[i].x = (rnd(76 * 100) / 100) + 23
+  ducks[i].x = (rnd(79 * 100) / 100) + 22
   ducks[i].y = 96
   ducks[i].counter = randomize_counter()
   ducks[i].direction = get_duck_direction()
+  ducks[i].spr_x_mod = get_duck_spr_x_mod(ducks[i])
+  ducks[i].spr_y_mod = get_duck_spr_y_mod(ducks[i])
   ducks[i].spr = 1
   ducks[i].jump = 0
   ducks[i].down = false
-  get_duck_spr_x_mod(ducks[i])
-  get_duck_spr_y_mod(ducks[i])
  end
 end
 
 function draw_ducks()
  for duck in all(ducks) do
-  if duck.down != true then
+  if not duck.down then
    move_duck(duck)
   else
    drop_duck(duck)
@@ -89,22 +89,26 @@ function jump_duck(duck)
    sfx(1)
    duck.jump = 1
    duck.spr = 2 + spr_light_mod
-   get_duck_spr_x_mod(duck)
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
   elseif duck.jump == 1 then
    duck.jump = 2
    duck.spr = 3 + spr_light_mod
-   get_duck_spr_x_mod(duck)
-   duck.x = duck.x + 8
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
+   if duck.direction == "r" then
+    duck.x = duck.x + 8
+   else
+    duck.x = duck.x - 8
+   end
   else
    duck.jump = 0
    duck.spr = 1 + spr_light_mod
-   get_duck_spr_x_mod(duck)
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
   end
  elseif light then
   drop_duck(duck)
   duck.jump = 0
   duck.spr = 1 + spr_light_mod
-  get_duck_spr_x_mod(duck)
+  duck.spr_x_mod = get_duck_spr_x_mod(duck)
  end
 end
 
@@ -118,15 +122,75 @@ function move_duck(duck)
   end
   if duck.jump == 0 then
    duck.counter = 0
-   duck.direction = get_duck_direction()
-   duck.spr_x_mod = get_duck_spr_x_mod(duck)
-   drop_duck(duck)
    if duck.direction == "r" then
     duck.x = duck.x + 8
    else
     duck.x = duck.x - 8
    end
+   drop_duck(duck)
+   if not duck.down then
+    duck.direction = get_duck_direction()
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
+   end
   end
+ end
+end
+
+function drop_duck(duck)
+ if duck.x > 101 or duck.x < 22 then
+  duck.down = true
+  if duck.y == 96 then
+   if duck.direction == 'r' then
+    duck.x = duck.x + 2
+   else
+    duck.x = duck.x - 2
+   end
+   duck.y = 104
+   duck.spr = 9 + spr_light_mod
+   duck.spr_x_mod = get_duck_spr_x_mod(duck)
+   duck.spr_y_mod = get_duck_spr_y_mod(duck)
+   duck.counter = 0
+  elseif duck.y == 104 then
+   if duck.counter > 2 then
+    sfx(2)
+    if duck.direction == 'r' then
+     duck.x = duck.x + 2
+    else
+     duck.x = duck.x - 2
+    end
+    duck.y = 112
+    duck.spr = 10 + spr_light_mod
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
+    duck.spr_y_mod = get_duck_spr_y_mod(duck)
+    duck.counter = 0
+   else
+    duck.counter = duck.counter + 1
+   end
+  elseif duck.y == 112 then
+   if duck.counter > 2 then
+    count = count - 1
+    light = true
+    if duck.direction == 'r' then
+     duck.x = duck.x + 2
+    else
+     duck.x = duck.x - 2
+    end
+    duck.y = FLOOR
+    duck.spr = 12 + spr_light_mod
+    duck.spr_x_mod = get_duck_spr_x_mod(duck)
+    duck.spr_y_mod = get_duck_spr_y_mod(duck)
+   else
+    duck.counter = duck.counter + 1
+   end
+  else
+   if light and duck.spr > 12 then
+    duck.spr = duck.spr - 16
+   elseif not light and duck.spr < 27 then
+    duck.spr = duck.spr + 16
+   end
+  end
+ else
+  duck.down = false
  end
 end
 
@@ -141,64 +205,17 @@ end
 
 function get_duck_spr_x_mod(duck)
  if duck.direction == "r" then
-  duck.spr_x_mod = nil
+  return nil
  else
-  duck.spr_x_mod = flip_x
+  return 'flip_x'
  end
 end
 
 function get_duck_spr_y_mod(duck)
-
- if duck.drop or duck.y == FLOOR then
-  duck.spr_y_mod = nil
+ if not duck.drop or duck.y == FLOOR then
+  return nil
  else
-  duck.spr_y_mod = flip_y
- end
-end
-
-function drop_duck(duck)
- if duck.x > 96 then
-  if duck.y == 96 then
-   duck.down = true
-   duck.x = duck.x + 2
-   duck.y = 104
-   duck.spr = 9 + spr_light_mod
-   get_duck_spr_x_mod(duck)
-   get_duck_spr_y_mod(duck)
-   duck.counter = 0
-  elseif duck.y == 104 then
-   if duck.counter > 2 then
-    sfx(2)
-    duck.x = duck.x + 2
-    duck.y = 112
-    duck.spr = 10 + spr_light_mod
-    get_duck_spr_x_mod(duck)
-    get_duck_spr_y_mod(duck)
-    duck.counter = 0
-   else
-    duck.counter = duck.counter + 1
-   end
-  elseif duck.y == 112 then
-   if duck.counter > 2 then
-    count = count - 1
-    light = true
-    duck.x = duck.x + 2
-    duck.y = FLOOR
-    duck.spr = 12 + spr_light_mod
-    get_duck_spr_x_mod(duck)
-    get_duck_spr_y_mod(duck)
-   else
-    duck.counter = duck.counter + 1
-   end
-  else
-   if light and duck.spr > 12 then
-    duck.spr = duck.spr - 16
-   elseif not light and duck.spr < 27 then
-    duck.spr = duck.spr + 16
-   end
-  end
- else
-  duck.down = false
+  return 'flip_y'
  end
 end
 
