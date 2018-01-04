@@ -45,6 +45,10 @@ function randomize_counter()
  return rnd(5 * 100) / 100
 end
 
+function increment_counter(count)
+ return count + 1
+end
+
 function make_ducks()
  ducks = {}
  for i = 1, 5 do
@@ -86,7 +90,7 @@ function draw_room()
 end
 
 function jump_duck(duck)
- duck.counter = duck.counter + 1
+ duck.counter = increment_counter(duck.counter)
  if duck.counter > speed and not light then
   if duck.jump == 0 then
    sfx(1)
@@ -97,11 +101,7 @@ function jump_duck(duck)
    duck.jump = 2
    duck.spr = 3 + spr_light_mod
    duck.spr_x_mod = get_duck_spr_x_mod(duck)
-   if duck.direction == 'r' then
-    duck.x = duck.x + 8
-   else
-    duck.x = duck.x - 8
-   end
+   duck.x = get_duck_x_pos(duck, 8)
   else
    duck.jump = 0
    duck.spr = 1 + spr_light_mod
@@ -125,11 +125,7 @@ function move_duck(duck)
   end
   if duck.jump == 0 then
    duck.counter = 0
-   if duck.direction == 'r' then
-    duck.x = duck.x + 8
-   else
-    duck.x = duck.x - 8
-   end
+   duck.x = get_duck_x_pos(duck, 8)
    drop_duck(duck)
    if not duck.down then
     duck.direction = get_duck_direction()
@@ -143,11 +139,7 @@ function drop_duck(duck)
  if duck.x > 101 or duck.x < 22 then
   duck.down = true
   if duck.y == 96 then
-   if duck.direction == 'r' then
-    duck.x = duck.x + 2
-   else
-    duck.x = duck.x - 2
-   end
+   duck.x = get_duck_x_pos(duck, 2)
    duck.y = 104
    duck.spr = 1 + spr_light_mod
    duck.spr_x_mod = get_duck_spr_x_mod(duck)
@@ -155,35 +147,27 @@ function drop_duck(duck)
    duck.counter = 0
   elseif duck.y == 104 then
    if duck.counter > 2 then
-    sfx(2)
-    if duck.direction == 'r' then
-     duck.x = duck.x + 2
-    else
-     duck.x = duck.x - 2
-    end
+    duck.x = get_duck_x_pos(duck, 2)
     duck.y = 112
     duck.spr = 2 + spr_light_mod
     duck.spr_x_mod = get_duck_spr_x_mod(duck)
     duck.spr_y_mod = get_duck_spr_y_mod(duck)
     duck.counter = 0
+    sfx(2)
    else
-    duck.counter = duck.counter + 1
+    duck.counter = increment_counter(duck.counter)
    end
   elseif duck.y == 112 then
    if duck.counter > 2 then
     count = count - 1
-    light = true
-    if duck.direction == 'r' then
-     duck.x = duck.x + 2
-    else
-     duck.x = duck.x - 2
-    end
+    duck.x = get_duck_x_pos(duck, 2)
     duck.y = floor
     duck.spr = 4 + spr_light_mod
     duck.spr_x_mod = get_duck_spr_x_mod(duck)
     duck.spr_y_mod = get_duck_spr_y_mod(duck)
+    light = true
    else
-    duck.counter = duck.counter + 1
+    duck.counter = increment_counter(duck.counter)
    end
   else
    if light and duck.spr > 4 then
@@ -222,10 +206,19 @@ function get_duck_spr_y_mod(duck)
  end
 end
 
+function get_duck_x_pos(duck, steps)
+ if duck.direction == 'r' then
+  return duck.x + steps
+ else
+  return duck.x - steps
+ end
+end
+
 function get_cursor_position(val)
  local str = ''..val
  return 64 - (#str * 2) 
 end
+
 __gfx__
 0000000000000000000009000090000000000a000000000000000400004000000000090000000000000000000000000000000000000000000000015555100000
 0000000000000000000090aa090aa00004990a000000000000004099040990000544090000000000000000000000000000000000000000000000000550000000
